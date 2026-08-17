@@ -89,6 +89,24 @@ pipeline {
             }
 
         }
+        stage('Prod E2E Test') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    reuseNode true
+                
+                }
+            }
+            steps {
+                sh '''
+                npx playwright test
+                '''
+            }
+            environment {
+                CI_ENVIRONMENT_URL = 'https://expert-cod-xr9g5g9r9979fvxr5-3000.app.github.dev'
+            }
+
+        }
         
     }
     post {
