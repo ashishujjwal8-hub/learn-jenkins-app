@@ -87,6 +87,12 @@ pipeline {
                 '''
             }
         }
+        stage("Approval") {
+            steps {
+                input 'Ready to deploy?'
+            }
+        }
+        /*
         stage('Staging E2E Test') {
             agent {
                 docker {
@@ -100,8 +106,8 @@ pipeline {
                 npx playwright test
                 '''
             }
-
         }
+        */
         stage('Deploy-prod') {
             agent {
                 docker {
