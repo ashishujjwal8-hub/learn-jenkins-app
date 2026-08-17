@@ -103,7 +103,7 @@ pipeline {
                 '''
             }
             environment {
-                CI_ENVIRONMENT_URL = 'https://expert-cod-xr9g5g9r9979fvxr5-3000.app.github.dev'
+                CI_ENVIRONMENT_URL = 'https://expert-cod-xr9g5g9r9979fvxr5-3000.app.github.dev/'
             }
 
         }
