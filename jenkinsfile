@@ -83,7 +83,10 @@ pipeline {
                 node_modules/.bin/netlify --version
                 echo "Deploying to production. Site ID $NETLIFY_SITE_ID"
                 node_modules/.bin/netlify status
-                node_modules/.bin/netlify deploy --no-build --dir=build --json
+                node_modules/.bin/netlify deploy --no-build --dir=build --json > deploy_staging.txt
+                echo 'installing node-jq'
+                npm install node-jq
+                node_modules/.bin/node-jq -r '.deploy_url' deploy_staging.txt
                 '''
             }
         }
