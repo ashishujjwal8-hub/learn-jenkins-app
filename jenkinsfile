@@ -88,7 +88,7 @@ pipeline {
                     npm install node-jq
                 '''
                 script {
-                    env.STAGING_URL = sh(script: 'node_modules/.bin/node-jq -r ".deploy_url" deploy_staging.txt', returnStdout: true).trim()
+                    env.STAGING_URL = sh(script: 'node_modules/.bin/node-jq -r ".deploy_url" deploy_staging.txt', returnStdout: true)
                 }
             }
         }
