@@ -81,7 +81,7 @@ pipeline {
                 sh '''
                 npm install netlify-cli
                 node_modules/.bin/netlify --version
-                echo "Deploying to production. Site ID $NETLIFY_SITE_ID"
+                echo "Deploying to staging enviorment.
                 node_modules/.bin/netlify status
                 node_modules/.bin/netlify deploy --no-build --dir=build --json > deploy_staging.txt
                 echo 'installing node-jq'
@@ -100,14 +100,15 @@ pipeline {
                 
                 }
             }
+            environment {
+                CI_ENVIRONMENT_URL = "${env.STAGING_URL}"
+            }
             steps {
                 sh '''
                 npx playwright test
                 '''
             }
-            environment {
-                CI_ENVIRONMENT_URL = "${env.STAGING_URL}"
-            }
+            
         }
         stage("Approval") {
             steps {
@@ -143,13 +144,13 @@ pipeline {
                 
                 }
             }
+            environment {
+                CI_ENVIRONMENT_URL = 'https://soft-trifle-3c9103.netlify.app'
+            }
             steps {
                 sh '''
                 npx playwright test
                 '''
-            }
-            environment {
-                CI_ENVIRONMENT_URL = 'https://soft-trifle-3c9103.netlify.app'
             }
 
         }
