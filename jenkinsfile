@@ -81,7 +81,7 @@ pipeline {
                 sh '''
                     npm install netlify-cli
                     node_modules/.bin/netlify --version
-                    echo "Deploying to staging enviorment.
+                    echo "Deploying to staging environment."
                     node_modules/.bin/netlify status
                     node_modules/.bin/netlify deploy --no-build --dir=build --json > deploy_staging.txt
                     echo "installing node-jq"
