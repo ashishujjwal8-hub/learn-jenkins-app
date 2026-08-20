@@ -88,7 +88,7 @@ pipeline {
                     netlify --version
                     echo "Deploying to staging environment."
                     netlify status
-                    netlify deploy --no-build --dir=build --json > deploy_staging.txt
+                    netlify deploy --dir=build --json > deploy_staging.txt
                     #ls -al node_modules/.bin/node*
                     node-jq -r ".deploy_url" deploy_staging.txt
                 '''
