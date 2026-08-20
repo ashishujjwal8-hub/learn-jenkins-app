@@ -59,10 +59,7 @@ pipeline {
                         docker {
                             image 'my-playwright'
                             reuseNode true
-
-                        }
-                        
-                        }
+                        }         
                     }
                     steps {
                         sh '''
@@ -166,7 +163,6 @@ pipeline {
 
         }
     }
-
     post {
         always {
             junit 'jest-results/junit.xml'
