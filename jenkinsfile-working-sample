@@ -1,0 +1,172 @@
+pipeline {
+    agent any
+
+    environment {
+        NETLIFY_SITE_ID = 'e45f3f5d-bf59-4736-8232-dd55e07e9096'
+        NETLIFY_AUTH_TOKEN = credentials('netlify-token')
+        
+    }
+
+    stages {
+        stage('Build') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                
+                }
+            }
+            steps {
+                sh '''
+                echo 'Building'
+                ls -la
+                node --version
+                npm --version
+                npm ci
+                npm run build
+                ls -al
+                '''
+            }
+        }
+        stage('AWS') {
+            agent {
+                docker {
+                    image 'amazon/aws-cli'
+                    args "--entrypoint=''"
+                    reuseNode true
+
+                }
+            }
+            environment{
+                AWS_S3_BUCKET = "learn-jenkins-10213065412"
+            }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'my-aws', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
+                    sh '''
+                        aws --version
+                        #echo "Hello s3!!" > index.html
+                        #aws s3 ls
+                        #aws s3 cp index.html s3://$AWS_S3_BUCKET/index.html
+                        aws s3 sync build s3://$AWS_S3_BUCKET/
+                    '''
+                }
+            }
+
+        }
+        stage('Run Tests') {
+            parallel {
+
+                stage('Test') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        
+                        }
+                    }
+                    steps {
+                        sh '''
+                            echo "Testing" 
+                            ls -l build/index.html
+                            test -f build/index.html
+                            npm test
+                        '''
+                    }
+       
+                }
+
+                stage('E2E Test') {
+                    agent {
+                        docker {
+                            image 'my-playwright'
+                            reuseNode true
+                        }         
+                    }
+                    steps {
+                        sh '''
+                        serve -s build &
+                        sleep 10
+                        npx playwright test
+                        '''
+                    }
+       
+                }
+
+            }
+        }
+        stage('Deploy-staging') {
+            agent {
+                docker {
+                    image 'my-playwright'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    netlify --version
+                    echo "Deploying to staging environment."
+                    netlify status
+                    netlify deploy --dir=build --json > deploy_staging.txt
+                    jq -r ".deploy_url" deploy_staging.txt
+                '''
+            }
+        }
+        stage("Approval") {
+            steps {
+                timeout(time: 1, unit: 'MINUTES') {
+                    input message: 'Do you wish to deploy to production?', ok: 'Yes, I am sure!'
+                }
+            }
+        }
+        /*
+        stage('Deploy-prod') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                
+                }
+            }
+            steps {
+                sh '''
+                npm install netlify-cli
+                node_modules/.bin/netlify --version
+                echo "Deploying to production. Site ID $NETLIFY_SITE_ID"
+                node_modules/.bin/netlify status
+                node_modules/.bin/netlify deploy --no-build --dir=build --prod
+                '''
+            }
+
+        }
+        */
+        stage('Deploy Prod and Prod E2E Test') {
+            agent {
+                docker {
+                    image 'my-playwright'
+                    reuseNode true
+                
+                }
+            }
+            environment {
+                CI_ENVIRONMENT_URL = 'https://soft-trifle-3c9103.netlify.app'
+            }
+            steps {
+                sh '''
+                npm --version
+                netlify --version
+                echo "Deploying to production. Site ID $NETLIFY_SITE_ID"
+                netlify status
+                netlify deploy --dir=build --prod
+                sleep 10
+                npx playwright test
+                '''
+            }
+
+        }
+    }
+    post {
+        always {
+            junit 'jest-results/junit.xml'
+        }
+    }
+}
